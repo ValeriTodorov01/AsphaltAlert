@@ -1,3 +1,4 @@
-/.idea
-/.datasets
-/.venv
+/ML/venv
+/ML/datasets
+/ML/.vscode
+/Ml/runs
