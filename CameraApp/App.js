@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Button } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image } from "react-native";
 import { useCameraPermission, useCameraDevice, Camera } from "react-native-vision-camera";
 // import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -11,6 +11,7 @@ export default function App() {
   const cameraRef = useRef(null)
   const [isRecording, setIsRecording] = useState(false)
   const [video, setVideo] = useState(null)
+  const [photo, setPhoto] = useState(null)
   const [videoSource, setVideoSource] = useState(null)
   const [isWatching, setIsWatching] = useState(false)
   const player = useVideoPlayer(videoSource, player => {
@@ -20,33 +21,36 @@ export default function App() {
 
 
   const onPress = async () => {
-    if (isRecording) {
-      await cameraRef.current.stopRecording()
-      console.log("Recording stopped")
-    }
-    else {
-      setIsRecording(true)
-      console.log("Recording started")
+    // if (isRecording) {
+    //   await cameraRef.current.stopRecording()
+    //   console.log("Recording stopped")
+    // }
+    // else {
+    //   setIsRecording(true)
+    //   console.log("Recording started")
       
-      await cameraRef.current.startRecording({
-        onRecordingFinished: (video) => {
-          console.log(video)
-          setIsRecording(false)
-          setVideo(video)
-          setVideoSource(video.path)
-        },
-        onRecordingError: (error) => {
-          console.warn(error)
-          setIsRecording(false)
-        }
-      }) 
-    } 
+    //   await cameraRef.current.startRecording({
+    //     onRecordingFinished: (video) => {
+    //       console.log(video)
+    //       setIsRecording(false)
+    //       setVideo(video)
+    //       setVideoSource(video.path)
+    //     },
+    //     onRecordingError: (error) => {
+    //       console.warn(error)
+    //       setIsRecording(false)
+    //     }
+    //   }) 
+// }
+      const photo = await cameraRef.current.takePhoto();
+      setPhoto(photo);
+
   }
 
   const handleVideo = () => {
     setIsWatching(!isWatching)
     console.log("Video is being watched")
-    console.log(videoSource)
+    console.log(photo)
   }
 
   useEffect(() => {
@@ -54,6 +58,8 @@ export default function App() {
       requestPermission()
     }
   }, [hasPermission])
+
+  useEffect(() => {console.log("Picture taken")}, [photo])
 
   if(!device) {
     return (
@@ -64,15 +70,16 @@ export default function App() {
   }
 
   return (
-    <View style={{ block: 'relative', width: '100%', height: '100%' }}>
-      <Camera ref={cameraRef} video={true} style={StyleSheet.absoluteFill} device={device} isActive={true}></Camera>
+    <View style={{ flex: 1 }}>
+      <Camera ref={cameraRef} photo={true} style={StyleSheet.absoluteFill} device={device} isActive={true}></Camera>
       {isRecording ? (
         <TouchableOpacity style={styles.buttonStop} onPress={onPress} />
       ) : (
         <TouchableOpacity style={styles.buttonStart} onPress={onPress} />
       )}
       <Button title="See video" onPress={handleVideo}/>
-      {isWatching && <VideoView style={styles.video} player={player} allowsFullscreen allowsPictureInPicture />}
+      {/* {isWatching && <VideoView style={styles.video} player={player} allowsFullscreen allowsPictureInPicture />} */}
+      {photo && isWatching && <Image source={{ uri: `file://${photo.path}` }} style={styles.video}></Image>}
     </View>
   );
 }
