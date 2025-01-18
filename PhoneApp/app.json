@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "PhoneApp",
+    "slug": "PhoneApp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "package": "com.valeri_t.PhoneApp"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "react-native-vision-camera",
+        {
+          "enableCameraPermission": true,
+          "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera.",
+          "enableLocation": true,
+          "locationPermissionText": "$(PRODUCT_NAME) needs your location."
+        }
+      ]
+    ]
+  }
+}
