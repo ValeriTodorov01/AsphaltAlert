@@ -15,20 +15,28 @@ def detect_pothole():
         print("No image file provided")
         return jsonify({"error": "No image file provided"}), 400
 
+    if 'longitude' not in request.form or 'latitude' not in request.form:
+        print("No geolocation provided")
+        return jsonify({"error": "No geolocation provided"}), 400
+
     file = request.files['image']
+    longitude = request.form['longitude']
+    latitude = request.form['latitude']
+    print(f"Received image with geolocation: {longitude}, {latitude}")
     if file.filename == '':
         return jsonify({"error": "Empty file name"}), 400
+
 
     try:
         img = Image.open(io.BytesIO(file.read()))
 
-        results = model.predict(img)
+        results = model.predict(img, conf=0.1)
         for result in results:
             result.show()
 
         if results:
             print(f"Potholes detected: {len(results)}")
-            print(f"Details: {results}")
+            # print(f"Details: {results}")
         else:
             print("No potholes detected")
 

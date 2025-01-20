@@ -14,11 +14,19 @@ import {
 	Camera,
 	PhotoFile,
 } from "react-native-vision-camera";
+import Geolocation from "react-native-geolocation-service";
 
 export default function App() {
 	const device = useCameraDevice("back");
-	const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission();
-	const { hasPermission: hasLocationPermission, requestPermission: requestLocationPermission } = useLocationPermission();
+	const {
+		hasPermission: hasCameraPermission,
+		requestPermission: requestCameraPermission,
+	} = useCameraPermission();
+	const {
+		hasPermission: hasLocationPermission,
+		requestPermission: requestLocationPermission,
+	} = useLocationPermission();
+	const [position, setPosition] = useState<Geolocation.GeoPosition>();
 	const cameraRef = useRef<Camera>(null);
 	const [isWorking, setIsWorking] = useState(false);
 	const [photo, setPhoto] = useState<PhotoFile>();
@@ -29,7 +37,10 @@ export default function App() {
 			if (!hasCameraPermission) {
 				const cameraStatus = await requestCameraPermission();
 				if (cameraStatus !== true) {
-					Alert.alert("Error", "Camera permission is required to use this app.");
+					Alert.alert(
+						"Error",
+						"Camera permission is required to use this app."
+					);
 					return;
 				}
 			}
@@ -37,22 +48,19 @@ export default function App() {
 			if (!hasLocationPermission) {
 				const locationStatus = await requestLocationPermission();
 				if (locationStatus !== true) {
-					Alert.alert("Error", "Location permission is required to geotag photos.");
+					Alert.alert(
+						"Error",
+						"Location permission is required to geotag photos."
+					);
 				}
 			}
 		};
 
 		requestPermissions();
 	}, [hasCameraPermission, hasLocationPermission]);
-	
 
 	const onPress = async () => {
 		setIsWorking(!isWorking);
-		if (!isWorking) {
-			console.log("Not taking picktures");
-		} else {
-			console.log("Pictures are being taken");
-		}
 	};
 
 	useEffect(() => {
@@ -70,50 +78,86 @@ export default function App() {
 	const takePicture = async () => {
 		if (!cameraRef.current) return;
 
-		const photo1 = await cameraRef.current.takePhoto({
-			enableShutterSound: false
-		});
-		setPhoto(photo1);
-		console.log("Photo taken:", photo1);
-		
-			console.log("EXIF Metadata:", photo1.metadata?.["{Exif}"]);
-			console.log("Location Permission", Camera.getLocationPermissionStatus());
-		
-		// sendPhotoToServer(photo1);
+		setPhoto(
+			await cameraRef.current.takePhoto({
+				enableShutterSound: false,
+			})
+		);
+		Geolocation.getCurrentPosition(
+			(position) => {
+				setPosition(position);
+			},
+			(error) => {
+				console.log(error.code, error.message);
+			},
+			{ enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+		);
 	};
 
-	const sendPhotoToServer = async (photo: PhotoFile) => {
-		const formData = new FormData();
-		const photoBlob = {
-			uri: `file://${photo.path}`,
-			type: "image/jpg", // Adjust type based on the actual photo format
-			name: "photo.jpg",
-		} as any;
-		formData.append("image", photoBlob);
-		try {
-			const response = await fetch(
-				"http://10.0.2.2:5000/detect_pothole",
-				{
-					method: "POST",
-					body: formData,
-					headers: {
-						Accept: "application/json",
-					},
-				}
-			);
-
-			if (!response.ok) {
-				throw new Error(
-					`Server responded with ${response.status} ${response.statusText}`
-				);
-			}
-
-			const result = await response.json();
-			console.log("Server response:", result);
-		} catch (error) {
-			console.error("Error sending photo to server:", error);
+	useEffect(() => {
+		if (!photo) {
+			return;
 		}
-	};
+		const sendPhotoToServer = async () => {
+			const formData = new FormData();
+			if (position && photo) {
+				
+				console.log("Sending photo to server...");
+				const photoBlob = {
+					uri: `file://${photo.path}`,
+					type: "image/jpg",
+					name: "photo.jpg",
+				} as any;
+
+				formData.append("image", photoBlob);
+				formData.append(
+					"longitude",
+					position.coords.longitude.toString()
+				);
+				formData.append(
+					"latitude",
+					position.coords.latitude.toString()
+				);
+
+				try {
+					const response = await fetch(
+						"http://192.168.1.138:5000/detect_pothole",
+						{
+							method: "POST",
+							body: formData,
+							headers: {
+								Accept: "application/json",
+							},
+						}
+					);
+
+					if (!response.ok) {
+						throw new Error(
+							`Server responded with ${response.status} ${response.statusText}`
+						);
+					}
+
+					const result = await response.json();
+					console.log("Server response:", result);
+				} catch (error) {
+					console.error("Error sending photo to server:", error);
+				}
+			}else {
+				console.log("No position or photo");
+				if(!position) {
+					console.log("No position");
+				}
+				if(!photo) {
+					console.log("No photo");
+				}
+			}
+		};
+
+		sendPhotoToServer();
+	}, [photo]);
+	// const sendPhotoToServer = async () => {
+
+	// };
 
 	if (!device) {
 		return (
@@ -131,7 +175,7 @@ export default function App() {
 				style={StyleSheet.absoluteFill}
 				device={device}
 				isActive={true}
-				enableLocation={hasLocationPermission}></Camera>
+				enableLocation={false}></Camera>
 			{isWorking ? (
 				<TouchableOpacity style={styles.buttonStop} onPress={onPress} />
 			) : (
