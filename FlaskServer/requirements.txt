@@ -1,5 +1,2 @@
 Flask
-ultralytics
-numpy
-opencv-python
-Pillow
+requests

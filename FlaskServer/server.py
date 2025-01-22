@@ -1,13 +1,10 @@
-from flask import Flask, request, jsonify
-# import os
-import io
-from PIL import Image
-from ultralytics import YOLO
-# from model import load_model, predict_image
-# from utils import extract_geolocation
+import requests
+import base64
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
-model = YOLO("runs/detect/dataset3-train-m/weights/best.pt")
+
+LITSERVE_URL = "http://localhost:8000/predict"
 
 @app.route('/detect_pothole', methods=['POST'])
 def detect_pothole():
@@ -27,27 +24,14 @@ def detect_pothole():
         return jsonify({"error": "Empty file name"}), 400
 
 
-    try:
-        img = Image.open(io.BytesIO(file.read()))
-
-        results = model.predict(img, conf=0.1)
-        for result in results:
-            result.show()
-
-        if results:
-            print(f"Potholes detected: {len(results)}")
-            # print(f"Details: {results}")
-        else:
-            print("No potholes detected")
-
-        return jsonify({
-            "potholes_detected": len(results)
-        })
-
-    except Exception as e:
-        print(f"Error processing image: {e}")
-        return jsonify({"error": "Failed to process the image"}), 500
-
+    image_data = base64.b64encode(file.read()).decode('utf-8')
+    payload = {"image_data": image_data}
+    response = requests.post(LITSERVE_URL, json=payload)
+    if response.status_code == 200:
+        print("!!!Response: ", response.json()["detections"], "!!!")
+        return jsonify({"potholes_detected": response.json()["detections"]}), 200
+    else:
+        return jsonify({"error": "Failed to process image"}), 400
 
 
 if __name__ == '__main__':

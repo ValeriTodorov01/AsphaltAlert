@@ -68,7 +68,7 @@ export default function App() {
 		if (isWorking) {
 			interval = setInterval(() => {
 				takePicture();
-			}, 2900);
+			}, 900);
 		} else {
 			return () => clearInterval(interval);
 		}
@@ -121,7 +121,7 @@ export default function App() {
 
 				try {
 					const response = await fetch(
-						"http://192.168.1.138:5000/detect_pothole",
+						"http://10.0.2.2:5000/detect_pothole",
 						{
 							method: "POST",
 							body: formData,

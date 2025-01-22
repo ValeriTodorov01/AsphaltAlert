@@ -2,7 +2,7 @@ datasets
 runs
 .vscode
 .idea
-modelVisualization.py
+testing.py
 request.py
 result.jpg
 images

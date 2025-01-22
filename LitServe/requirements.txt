@@ -1,0 +1,7 @@
+# Install PyTorch and TorchVision with CUDA 12.4 support using the official index
+# Run this manually: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+
+Pillow
+litserve
+ultralytics
+
