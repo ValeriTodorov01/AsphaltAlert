@@ -5,72 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="78ee867f-5833-43d2-8ef2-b52b492abb98" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/images/img_10.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/img_8.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/img_9.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/diplomna.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/App.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/build.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/debug.keystore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/proguard-rules.pro" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/debug/AndroidManifest.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/AndroidManifest.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/java/com/valeri_t/CameraApp/MainActivity.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/java/com/valeri_t/CameraApp/MainApplication.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/drawable-hdpi/splashscreen_logo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/drawable-mdpi/splashscreen_logo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/drawable-xhdpi/splashscreen_logo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/drawable-xxhdpi/splashscreen_logo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/drawable-xxxhdpi/splashscreen_logo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/drawable/ic_launcher_background.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/drawable/rn_edit_text_material.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-hdpi/ic_launcher.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-mdpi/ic_launcher.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/values-night/colors.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/values/colors.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/values/strings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/app/src/main/res/values/styles.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/build.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/gradle.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/gradlew" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/gradlew.bat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/android/settings.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/app.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/assets/adaptive-icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/assets/favicon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/assets/icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/assets/splash-icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/components/RecordButton.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/index.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../CameraApp/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/result.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/result.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
