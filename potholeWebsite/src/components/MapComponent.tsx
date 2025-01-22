@@ -1,11 +1,8 @@
 "use client";
 
-import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
-// import AllMarkers from "./AllMarkers"
-import type { Marker } from "@googlemaps/markerclusterer";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { APIProvider, Map } from "@vis.gl/react-google-maps";
+import AllMarkers from "./AllMarkers"
 import { Hole } from "./Hole";
-import { useEffect, useRef, useState } from "react";
 
 const center = { lat: 42.699855, lng: 23.311125 };
 
@@ -53,8 +50,8 @@ const MapComponent = () => {
 					"h-[80%] w-[90%] mt-8 sm:mt-12"
 				}`}>
 				<Map
-					defaultCenter={{ lat: 42.697855, lng: 23.309125 }}
-					defaultZoom={9}
+					defaultCenter={center}
+					defaultZoom={10}
 					gestureHandling={"greedy"}
 					disableDefaultUI={false}
 					mapId={import.meta.env.VITE_MAP_ID}>
@@ -65,54 +62,6 @@ const MapComponent = () => {
 	);
 };
 
-import { AdvancedMarker } from "@vis.gl/react-google-maps";
 
-type AllMarkersProps = { points: Hole[] };
-
-const AllMarkers = ({ points }: AllMarkersProps) => {
-	const map = useMap();
-	const [markers, setMarkers] = useState<{ [key: string]: Marker }>({});
-	const clusterer = useRef<MarkerClusterer | null>(null);
-
-	useEffect(() => {
-		if (!map) return;
-		if (!clusterer.current) {
-			clusterer.current = new MarkerClusterer({ map });
-		}
-	}, [map]);
-
-	useEffect(() => {
-		if (!clusterer.current) return;
-		clusterer.current.clearMarkers();
-		clusterer.current.addMarkers(Object.values(markers));
-	}, [markers]);
-
-	const setMarkerRef = (marker: Marker | null, key: string) => {
-		if (marker && markers[key]) return;
-		if (!marker && !markers[key]) return;
-
-		setMarkers((prev) => {
-			if (marker) {
-				return { ...prev, [key]: marker };
-			} else {
-				const newMarkers = { ...prev };
-				delete newMarkers[key];
-				return newMarkers;
-			}
-		});
-	};
-	return (
-		<>
-			{points.map((point) => (
-				<AdvancedMarker
-					position={point.location}
-					key={point.key}
-					ref={(marker) =>
-						setMarkerRef(marker, point.key)
-					}></AdvancedMarker>
-			))}
-		</>
-	);
-};
 
 export default MapComponent;
