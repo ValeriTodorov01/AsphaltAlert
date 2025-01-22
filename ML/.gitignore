@@ -3,4 +3,5 @@ runs
 .vscode
 .idea
 modelVisualization.py
+request.py
 result.jpg
