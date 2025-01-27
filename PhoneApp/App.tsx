@@ -13,11 +13,15 @@ import {
 	useLocationPermission,
 	Camera,
 	PhotoFile,
+	useCameraFormat,
 } from "react-native-vision-camera";
 import Geolocation from "react-native-geolocation-service";
 
 export default function App() {
 	const device = useCameraDevice("back");
+	const format = useCameraFormat(device, [
+		{ photoResolution: { width: 416, height: 416 } }
+	  ])
 	const {
 		hasPermission: hasCameraPermission,
 		requestPermission: requestCameraPermission,
@@ -30,8 +34,7 @@ export default function App() {
 	const cameraRef = useRef<Camera>(null);
 	const [isWorking, setIsWorking] = useState(false);
 	const [photo, setPhoto] = useState<PhotoFile>();
-	// const [isWatching, setIsWatching] = useState(false);
-	// Request Permissions
+	
 	useEffect(() => {
 		const requestPermissions = async () => {
 			if (!hasCameraPermission) {
@@ -68,7 +71,7 @@ export default function App() {
 		if (isWorking) {
 			interval = setInterval(() => {
 				takePicture();
-			}, 2900);
+			}, 2000);
 		} else {
 			return () => clearInterval(interval);
 		}
@@ -90,7 +93,7 @@ export default function App() {
 			(error) => {
 				console.log(error.code, error.message);
 			},
-			{ enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+			{ enableHighAccuracy: true, timeout: 1500, maximumAge: 1000 }
 		);
 	};
 
@@ -112,11 +115,11 @@ export default function App() {
 				formData.append("image", photoBlob);
 				formData.append(
 					"longitude",
-					position.coords.longitude.toString()
+					"23.352209"
 				);
 				formData.append(
 					"latitude",
-					position.coords.latitude.toString()
+					"42.661400" 
 				);
 
 				try {
@@ -155,9 +158,6 @@ export default function App() {
 
 		sendPhotoToServer();
 	}, [photo]);
-	// const sendPhotoToServer = async () => {
-
-	// };
 
 	if (!device) {
 		return (
@@ -175,7 +175,9 @@ export default function App() {
 				style={StyleSheet.absoluteFill}
 				device={device}
 				isActive={true}
-				enableLocation={false}></Camera>
+				enableLocation={false}
+				format={format}>
+				</Camera>
 			{isWorking ? (
 				<TouchableOpacity style={styles.buttonStop} onPress={onPress} />
 			) : (

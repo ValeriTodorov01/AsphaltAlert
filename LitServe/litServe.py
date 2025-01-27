@@ -27,7 +27,7 @@ class YOLOLitAPI(ls.LitAPI):
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
         transform = torchvision.transforms.Compose([
-            torchvision.transforms.Resize((416, 416)),  
+            # torchvision.transforms.Resize((416, 416)),  
             torchvision.transforms.ToTensor(),         
         ])
         input_tensor = transform(image).unsqueeze(0).to(self.device)  
