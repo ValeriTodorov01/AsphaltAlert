@@ -7,3 +7,7 @@ request.py
 result.jpg
 images
 output
+*.env
+testing.py
+cache
+*.pbf

@@ -68,7 +68,7 @@ export default function App() {
 		if (isWorking) {
 			interval = setInterval(() => {
 				takePicture();
-			}, 900);
+			}, 2900);
 		} else {
 			return () => clearInterval(interval);
 		}
