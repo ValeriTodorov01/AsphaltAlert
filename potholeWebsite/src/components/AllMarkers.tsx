@@ -1,55 +1,48 @@
 import type { Marker } from "@googlemaps/markerclusterer";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { Hole } from "./Hole";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 
-type AllMarkersProps = { points: Hole[] };
+type AllMarkersProps = {
+  points: Hole[];
+};
 
 const AllMarkers = ({ points }: AllMarkersProps) => {
-	const map = useMap();
-	const [markers, setMarkers] = useState<{ [key: string]: Marker }>({});
-	const clusterer = useRef<MarkerClusterer | null>(null);
+  const map = useMap();
+  const clustererRef = useRef<MarkerClusterer | null>(null);
+  const markersRef = useRef<{ [key: string]: Marker }>({});
 
-	useEffect(() => {
-		if (!map) return;
-		if (!clusterer.current) {
-			clusterer.current = new MarkerClusterer({ map });
-		}
-	}, [map]);
+  useEffect(() => {
+    if (!map || clustererRef.current) return;
+    clustererRef.current = new MarkerClusterer({ map });
+  }, [map]);
 
-	useEffect(() => {
-		if (!clusterer.current) return;
-		clusterer.current.clearMarkers();
-		clusterer.current.addMarkers(Object.values(markers));
-	}, [markers]);
+  useEffect(() => {
+    if (!clustererRef.current) return;
+    clustererRef.current.clearMarkers();
+    clustererRef.current.addMarkers(Object.values(markersRef.current));
+  }, [points]);
 
-	const setMarkerRef = (marker: Marker | null, key: string) => {
-		if (marker && markers[key]) return;
-		if (!marker && !markers[key]) return;
+  const setMarkerRef = (marker: Marker | null, key: string) => {
+    if (marker) {
+      markersRef.current[key] = marker;
+    } else {
+      delete markersRef.current[key];
+    }
+  };
 
-		setMarkers((prev) => {
-			if (marker) {
-				return { ...prev, [key]: marker };
-			} else {
-				const newMarkers = { ...prev };
-				delete newMarkers[key];
-				return newMarkers;
-			}
-		});
-	};
-	return (
-		<>
-			{points.map((point) => (
-				<AdvancedMarker
-					position={point.location}
-					key={point.key}
-					ref={(marker) =>
-						setMarkerRef(marker, point.key)
-					}></AdvancedMarker>
-			))}
-		</>
-	);
+  return (
+    <>
+      {points.map((point) => (
+        <AdvancedMarker
+          key={point.key}
+          position={point.location}
+          ref={(marker) => point.key && setMarkerRef(marker, point.key)}
+        />
+      ))}
+    </>
+  );
 };
 
 export default AllMarkers;

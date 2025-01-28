@@ -1,5 +1,5 @@
 export type Hole = {
-	key: string;
+	key?: string;
 	location: google.maps.LatLngLiteral;
 	severity: string;
 	description?: string;

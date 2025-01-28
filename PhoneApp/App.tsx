@@ -93,7 +93,7 @@ export default function App() {
 			(error) => {
 				console.log(error.code, error.message);
 			},
-			{ enableHighAccuracy: true, timeout: 1500, maximumAge: 1000 }
+			{ enableHighAccuracy: true, timeout: 30000, maximumAge: 2800 }
 		);
 	};
 
@@ -115,11 +115,11 @@ export default function App() {
 				formData.append("image", photoBlob);
 				formData.append(
 					"longitude",
-					"23.352209"
+					position.coords.longitude.toString()
 				);
 				formData.append(
 					"latitude",
-					"42.661400" 
+					position.coords.latitude.toString()
 				);
 
 				try {

@@ -96,7 +96,14 @@ def create_app():
 
     @app.route('/potholes', methods=['GET'])
     def get_potholes():
-        potholes = Pothole.query.all()
+        east = float(request.args["east"])
+        west = float(request.args["west"])
+        north = float(request.args["north"])
+        south = float(request.args["south"])
+        potholes = Pothole.query.filter(
+            Pothole.latitude.between(south, north),
+            Pothole.longitude.between(west, east)
+        ).all()
         return jsonify([{"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity} for p in potholes])
 
     return app
