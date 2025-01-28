@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 
 interface HeaderProps {
-	setModeAddHoleTrue: () => void;
-	setCoords: () => void;
+	getPosition: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ setModeAddHoleTrue, setCoords }) => {
+const Header = ({ getPosition }: HeaderProps) => {
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
 	useEffect(() => {
@@ -30,18 +29,21 @@ const Header: React.FC<HeaderProps> = ({ setModeAddHoleTrue, setCoords }) => {
 			<div className="flex flex-col sm:flex-row gap-5">
 				<button
 					className="text-white text-[15px] bg-[#344050] rounded-xl p-3"
-					onClick={setCoords}>
+					onClick={getPosition}>
 					{windowWidth < 640 ? "Nearby Holes" : "Show Nearby Holes"}
 				</button>
 
 				<button
 					className="flex items-center bg-[#D9D9D9] rounded-xl p-3"
 					onClick={() => {
-						setModeAddHoleTrue();
 						console.log("Add Hole Button Clicked");
 					}}>
 					{windowWidth < 640 ? "New Hole" : "Add New Hole"}
-					<span className="text-2xl sm:text-3xl" style={{ lineHeight: 0 }}>+</span>
+					<span
+						className="text-2xl sm:text-3xl"
+						style={{ lineHeight: 0 }}>
+						+
+					</span>
 				</button>
 			</div>
 		</header>

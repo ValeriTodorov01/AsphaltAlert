@@ -6,9 +6,11 @@ import { APIProvider, Map } from "@vis.gl/react-google-maps";
 import AllMarkers from "./AllMarkers";
 import { Hole } from "./Hole";
 
-const center = { lat: 42.699855, lng: 23.311125 };
+interface MapComponentProps {
+	centerCoords: GeolocationCoordinates | undefined;
+}
 
-const MapComponent = () => {
+const MapComponent = ({ centerCoords }: MapComponentProps) => {
 	const [locations, setLocations] = useState<Hole[]>([]);
 	const [boundaries, setBoundaries] = useState<google.maps.LatLngBoundsLiteral>();
 	const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -70,19 +72,20 @@ const MapComponent = () => {
 		fetchHoles();
 	}, [boundaries]);
 
+
 	return (
 		<APIProvider apiKey={import.meta.env.VITE_MAP_API_KEY}>
 			<div
 				className={`flex border-2 border-black h-[80%] w-[90%] mt-8 sm:mt-12`}>
 				<Map
-					defaultCenter={center}
+					defaultCenter={centerCoords ? { lat: centerCoords.latitude, lng: centerCoords.longitude } : { lat: 42.699855, lng: 23.311125 }}
 					defaultZoom={17}
 					gestureHandling={"greedy"}
 					disableDefaultUI={false}
 					mapId={import.meta.env.VITE_MAP_ID}
 					onIdle={handleIdle}
 					>
-					<AllMarkers points={locations}/>
+					<AllMarkers points={locations} centerCoords={centerCoords}/>
 				</Map>
 			</div>
 		</APIProvider>

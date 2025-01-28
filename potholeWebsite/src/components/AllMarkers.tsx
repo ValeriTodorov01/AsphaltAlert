@@ -6,9 +6,10 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 
 type AllMarkersProps = {
   points: Hole[];
+  centerCoords: GeolocationCoordinates | undefined;
 };
 
-const AllMarkers = ({ points }: AllMarkersProps) => {
+const AllMarkers = ({ points, centerCoords }: AllMarkersProps) => {
   const map = useMap();
   const clustererRef = useRef<MarkerClusterer | null>(null);
   const markersRef = useRef<{ [key: string]: Marker }>({});
@@ -31,6 +32,11 @@ const AllMarkers = ({ points }: AllMarkersProps) => {
       delete markersRef.current[key];
     }
   };
+
+  useEffect(() => {
+    if (!centerCoords || !map) return;
+    map.panTo({ lat: centerCoords.latitude, lng: centerCoords.longitude });
+  }, [centerCoords]);
 
   return (
     <>

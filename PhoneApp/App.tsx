@@ -20,7 +20,7 @@ import Geolocation from "react-native-geolocation-service";
 export default function App() {
 	const device = useCameraDevice("back");
 	const format = useCameraFormat(device, [
-		{ photoResolution: { width: 416, height: 416 } }
+		{ photoResolution: { width: 640, height: 480 } }
 	  ])
 	const {
 		hasPermission: hasCameraPermission,
@@ -105,7 +105,7 @@ export default function App() {
 			const formData = new FormData();
 			if (position && photo) {
 				
-				console.log("Sending photo to server...");
+				console.log("Sending photo to server...", photo.height, photo.width);
 				const photoBlob = {
 					uri: `file://${photo.path}`,
 					type: "image/jpg",
@@ -124,7 +124,7 @@ export default function App() {
 
 				try {
 					const response = await fetch(
-						"http://10.0.2.2:5000/detect_pothole",
+						"http://192.168.0.108:5000/detect_pothole",
 						{
 							method: "POST",
 							body: formData,
@@ -176,7 +176,8 @@ export default function App() {
 				device={device}
 				isActive={true}
 				enableLocation={false}
-				format={format}>
+				format={format}
+				resizeMode="contain">
 				</Camera>
 			{isWorking ? (
 				<TouchableOpacity style={styles.buttonStop} onPress={onPress} />
