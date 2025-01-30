@@ -5,7 +5,7 @@ import { useGeolocated } from "react-geolocated";
 
 
 function App() {
-	const { coords, isGeolocationAvailable, isGeolocationEnabled, getPosition } =
+	const { coords, getPosition } =
 	useGeolocated({
 		positionOptions: {
 			enableHighAccuracy: false,

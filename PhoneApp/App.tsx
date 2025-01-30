@@ -124,7 +124,7 @@ export default function App() {
 
 				try {
 					const response = await fetch(
-						"http://192.168.0.108:5000/detect_pothole",
+						"http://192.168.1.100:5000/detect_pothole",
 						{
 							method: "POST",
 							body: formData,
