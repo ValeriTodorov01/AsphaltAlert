@@ -11,3 +11,5 @@ output
 testing.py
 cache
 *.pbf
+testing_firebase.py
+potholefinder-cbfd2-firebase-adminsdk-fbsvc-86bebd6531.json

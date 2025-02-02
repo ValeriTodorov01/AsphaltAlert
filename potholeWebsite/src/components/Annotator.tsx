@@ -19,6 +19,7 @@ const Annotator = ({
 	const [isDrawing, setIsDrawing] = useState<boolean>(false);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+	const yoloBoxes = useRef<YOLOBox[]>([]);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -84,7 +85,7 @@ const Annotator = ({
 				h: height,
 			};
 
-			onComplete([yoloBox]);
+			yoloBoxes.current[0] = yoloBox;
 		}
 	};
 
@@ -119,10 +120,11 @@ const Annotator = ({
 				draggable={false}
 				className="absolute z-10"
 			/>
-			<div className="absolute flex gap-4 top-0 mt-2">
+			<div className="absolute flex gap-4 top-0 mt-2 xl:mt-10">
 				<button
 					style={{ userSelect: "none" }}
-					className=" top-0 mt-10 border border-black py-2 px-3 rounded-md z-20 bg-white hover:bg-stone-600 hover:text-white hover:transition hover:duration-200 duration-200">
+					className=" top-0 mt-10 border border-black py-2 px-3 rounded-md z-20 bg-white hover:bg-stone-600 hover:text-white hover:transition hover:duration-200 duration-200"
+					onClick={() => onComplete(yoloBoxes.current)}>
 					Submit
 				</button>
 				<button

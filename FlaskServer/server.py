@@ -4,11 +4,22 @@ import requests
 from datetime import datetime, timezone
 import os
 from dotenv import load_dotenv
+import uuid
+import json
+
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from requests.exceptions import RequestException
+
+import firebase_admin
+from firebase_admin import credentials, storage
+from werkzeug.utils import secure_filename
+
+cred = credentials.Certificate("potholefinder-cbfd2-firebase-adminsdk-fbsvc-86bebd6531.json")
+firebase_admin.initialize_app(cred, {"storageBucket": "potholefinder-cbfd2.firebasestorage.app"})
+bucket = storage.bucket()
 
 load_dotenv()
 
@@ -41,6 +52,7 @@ def create_app():
             return jsonify({"error": "No geolocation provided"}), 400
 
         image_file = request.files['image']
+        app.logger.info(f"Received image file: {image_file.name}")
         latitude_str = request.form['latitude']
         longitude_str = request.form['longitude']
 
@@ -54,7 +66,7 @@ def create_app():
         except ValueError:
             app.logger.warning(f"Invalid coordinates: {latitude_str}, {longitude_str}")
             return jsonify({"error": "Invalid latitude or longitude"}), 400
-
+    
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
         payload = {"image_data": image_data}
 
@@ -106,6 +118,47 @@ def create_app():
         ).all()
         return jsonify([{"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity} for p in potholes])
 
+
+    @app.route('/upload_image', methods=['POST'])
+    def upload_image():
+        if 'image' not in request.files:
+            app.logger.warning("No image file provided.")
+            return jsonify({"error": "No image file provided"}), 400
+
+        if 'boxes' not in request.form:
+            app.logger.warning("No boxes provided.")
+            return jsonify({"error": "No boxes provided"}), 400
+
+
+        image_file = request.files['image']
+        yolo_boxes_data = request.form['boxes']
+
+        if not image_file or image_file.filename == '':
+            app.logger.warning("Empty file name.")
+            return jsonify({"error": "Empty file name"}), 400
+
+        if not yolo_boxes_data:
+            app.logger.warning("No boxes provided.")
+            return jsonify({"error": "No boxes provided"}), 400
+        
+        unique_id = uuid.uuid4().hex
+        unique_filename = f"{unique_id}" + ".jpeg"
+        destination_path = f"dataset_images/{unique_filename}"
+
+        blob = bucket.blob(destination_path)
+        blob.upload_from_file(image_file, content_type=image_file.content_type)
+        app.logger.info(f"File {unique_filename} {image_file.content_type} uploaded to {bucket.name} in folder 'dataset_images'.")
+        try:
+            yolo_boxes = json.loads(yolo_boxes_data) 
+        except json.JSONDecodeError as e:
+            app.logger.error(f"Failed to parse YOLO boxes JSON: {e}")
+            return jsonify({"error": "Invalid JSON format for YOLO boxes"}), 400
+
+        print(yolo_boxes[0])
+        insert_yolo_boxes(yolo_boxes[0]["class"], yolo_boxes[0]["x_center"], yolo_boxes[0]["y_center"], yolo_boxes[0]["w"], yolo_boxes[0]["h"], unique_filename)
+
+        return jsonify({"message": f"File {unique_filename} uploaded successfully.", "file_url": blob.public_url}), 200
+
     return app
 
 
@@ -119,6 +172,28 @@ class Pothole(db.Model):
     longitude = db.Column(db.Float, nullable=False)
     severity = db.Column(db.String(16), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+class YoloBoxes(db.Model):
+    __tablename__ = 'yoloBoxes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    class_id = db.Column(db.Integer, nullable=False)
+    x_center = db.Column(db.Float, nullable=False)
+    y_center = db.Column(db.Float, nullable=False)
+    width = db.Column(db.Float, nullable=False) 
+    height = db.Column(db.Float, nullable=False)
+    file_name = db.Column(db.String(255), nullable=False)
+
+
+def insert_yolo_boxes(class_id, x_center, y_center, width, height, file_name):
+    try:
+        new_yolo_boxes = YoloBoxes(class_id=class_id, x_center=x_center, y_center=y_center, width=width, height=height, file_name=file_name)
+        db.session.add(new_yolo_boxes)
+        db.session.commit()
+        logging.info(f"Inserted yolo boxes: class_id={class_id}, x_center={x_center}, y_center={y_center}, width={width}, height={height}, file_name={file_name}")
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Failed to insert yolo boxes: {e}")
 
 def insert_pothole(lat, lon, severity):
     try:

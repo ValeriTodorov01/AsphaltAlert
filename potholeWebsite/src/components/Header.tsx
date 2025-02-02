@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Annotator from "./Annotator";
 import { YOLOBox } from "./YOLOBox";
 
@@ -10,6 +10,12 @@ const Header = ({ getPosition }: HeaderProps) => {
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 	const [image, setImage] = useState<File | null>(null);
 	const [resizedImage, setResizedImage] = useState<string | null>(null);
+	const [isAnnotating, setIsAnnotating] = useState<boolean>(false);
+	const canvasRef = useRef<HTMLCanvasElement | null>(null);
+	
+	useEffect(() => {
+		canvasRef.current = document.createElement("canvas");
+	}, []);
 
 	const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (event.target.files && event.target.files[0]) {
@@ -17,9 +23,10 @@ const Header = ({ getPosition }: HeaderProps) => {
 			event.target.value = "";
 		}
 	};
-
+	
 	useEffect(() => {
 		resizeImage();
+		setIsAnnotating(true);
 	}, [image]);
 
 	useEffect(() => {
@@ -38,6 +45,31 @@ const Header = ({ getPosition }: HeaderProps) => {
 		yoloBoxes.forEach((box) => {
 			console.log("BOX", box);
 		});
+		if (!canvasRef.current) return;
+		canvasRef.current.toBlob(async (blob) => {
+			const formData = new FormData();
+			if (!blob || !image) return;
+			formData.append("image", blob, image.name);
+			formData.append("boxes", JSON.stringify(yoloBoxes));
+
+			try {
+				const response = await fetch("http://127.0.0.1:5000/upload_image", {
+					method: "POST",
+					body: formData,
+					mode: "cors"
+				});
+
+				const data = await response.json();
+				console.log("Response:", data);
+			} catch (error) {
+				console.error("Error uploading image:", error);
+			}
+			console.log("blob", blob);
+		}, "image/jpeg");
+		setResizedImage(null);
+		setImage(null);
+		setIsAnnotating(false);
+		
 	};
 
 	const resizeImage = () => {
@@ -49,17 +81,18 @@ const Header = ({ getPosition }: HeaderProps) => {
 			const img = new Image();
 			img.src = event.target?.result as string;
 			img.onload = () => {
-				const canvas = document.createElement("canvas");
-				const ctx = canvas.getContext("2d");
+				if(!canvasRef.current) return;
+				const ctx = canvasRef.current.getContext("2d");
 				if (!ctx) return;
 
-				canvas.width = 640;
-				canvas.height = 480;
+				canvasRef.current.width = 640;
+				canvasRef.current.height = 480;
 				ctx.drawImage(img, 0, 0, 640, 480);
-				setResizedImage(canvas.toDataURL("image/jpeg"));
+				setResizedImage(canvasRef.current.toDataURL("image/jpeg"));
 			};
 		};
 	};
+
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
@@ -73,6 +106,9 @@ const Header = ({ getPosition }: HeaderProps) => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	}, []);
+
+	
+
 	return (
 		<>
 			<header className="flex justify-between w-full font-semibold text-[#344050] px-4 sm:px-12 pt-5">
@@ -102,13 +138,14 @@ const Header = ({ getPosition }: HeaderProps) => {
 					</label>
 				</div>
 			</header>
-			{resizedImage && (
+			{isAnnotating && resizedImage && (
 				<Annotator
 					imageUrl={resizedImage}
 					onComplete={handleOnAnnotationComplete}
 					cancelAnnotation={() => {
 						setResizedImage(null);
 						setImage(null);
+						setIsAnnotating(false);
 					}}
 				/>
 			)}
