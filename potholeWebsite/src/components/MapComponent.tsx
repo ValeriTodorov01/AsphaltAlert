@@ -57,8 +57,7 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 					(hole: any, index: number) => ({
 						key: index.toString(),
 						location: { lat: hole.latitude, lng: hole.longitude },
-						severity: hole.severity,
-						description: hole.severity + " severity pothole",
+						severity: hole.severity
 					})
 				);
 		
