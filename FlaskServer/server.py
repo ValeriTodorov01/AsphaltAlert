@@ -23,8 +23,8 @@ bucket = storage.bucket()
 
 load_dotenv()
 
-DB_URI = 'postgresql://user:password@localhost:5432/potholedb'
-LITSERVE_URL = "http://localhost:8000/predict"
+DB_URI = os.getenv("DB_URI")
+LITSERVE_URL = os.getenv("LITSERVE_URL")
 TOMTOM_API_KEY=os.getenv("TOMTOM_API_KEY")
 TOMTOM_URL_TEMPLATE = "https://api.tomtom.com/search/2/reverseGeocode/{latitude},{longitude}.json?key={key}&radius=100&returnSpeedLimit=true"
 
@@ -41,6 +41,10 @@ def create_app():
 
     logging.basicConfig(level=logging.INFO)
 
+    def error_response(message, code=400):
+        app.logger.warning(message)
+        return jsonify({"error": message}), code
+
     @app.route('/detect_pothole', methods=['POST'])
     def detect_pothole():
         if 'image' not in request.files:
@@ -51,23 +55,23 @@ def create_app():
             app.logger.warning("No geolocation data provided.")
             return jsonify({"error": "No geolocation provided"}), 400
 
-        image_file = request.files['image']
-        app.logger.info(f"Received image file: {image_file.name}")
-        latitude_str = request.form['latitude']
-        longitude_str = request.form['longitude']
+        image_file = request.files["image"]
+        if not image_file or image_file.filename == "":
+            return error_response("Empty file name.")
 
-        if not image_file or image_file.filename == '':
-            app.logger.warning("Empty file name.")
-            return jsonify({"error": "Empty file name"}), 400
+        app.logger.info(f"Received image file: {image_file.filename}")
+        latitude_str = request.form.get("latitude")
+        longitude_str = request.form.get("longitude")
 
         try:
             latitude = float(latitude_str)
             longitude = float(longitude_str)
         except ValueError:
-            app.logger.warning(f"Invalid coordinates: {latitude_str}, {longitude_str}")
-            return jsonify({"error": "Invalid latitude or longitude"}), 400
+            return error_response(f"Invalid coordinates: {latitude_str}, {longitude_str}")
+
     
-        image_data = base64.b64encode(image_file.read()).decode('utf-8')
+        image_file.seek(0)
+        image_data = base64.b64encode(image_file.read()).decode("utf-8")
         payload = {"image_data": image_data}
 
         try:
@@ -92,7 +96,7 @@ def create_app():
                     else:
                         insert_pothole(latitude, longitude, "High")
 
-        return jsonify({"potholes_detected": detections}), 200
+        return jsonify({"dangers_detected": detections}), 200
     
     def get_speed_limit(lat, lon):
         try:
@@ -108,35 +112,37 @@ def create_app():
 
     @app.route('/potholes', methods=['GET'])
     def get_potholes():
-        east = float(request.args["east"])
-        west = float(request.args["west"])
-        north = float(request.args["north"])
-        south = float(request.args["south"])
+        try:
+            east = float(request.args["east"])
+            west = float(request.args["west"])
+            north = float(request.args["north"])
+            south = float(request.args["south"])
+        except (KeyError, ValueError):
+            return error_response("Invalid or missing query parameters for bounding box.")
+
         potholes = Pothole.query.filter(
             Pothole.latitude.between(south, north),
             Pothole.longitude.between(west, east)
         ).all()
-        return jsonify([{"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity} for p in potholes])
-
+        result = [
+            {"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity}
+            for p in potholes
+        ]
+        return jsonify(result), 200
 
     @app.route('/upload_image', methods=['POST'])
     def upload_image():
-        if 'image' not in request.files:
-            app.logger.warning("No image file provided.")
-            return jsonify({"error": "No image file provided"}), 400
-
-        if 'boxes' not in request.form:
-            app.logger.warning("No boxes provided.")
-            return jsonify({"error": "No boxes provided"}), 400
-
+        if "image" not in request.files:
+            return error_response("No image file provided.")
+        if "boxes" not in request.form:
+            return error_response("No boxes provided.")
 
         image_file = request.files['image']
-        yolo_boxes_data = request.form['boxes']
-
         if not image_file or image_file.filename == '':
             app.logger.warning("Empty file name.")
             return jsonify({"error": "Empty file name"}), 400
 
+        yolo_boxes_data = request.form['boxes']
         if not yolo_boxes_data:
             app.logger.warning("No boxes provided.")
             return jsonify({"error": "No boxes provided"}), 400
@@ -145,16 +151,25 @@ def create_app():
         unique_filename = f"{unique_id}" + ".jpeg"
         destination_path = f"dataset_images/{unique_filename}"
 
-        blob = bucket.blob(destination_path)
-        blob.upload_from_file(image_file, content_type=image_file.content_type)
-        app.logger.info(f"File {unique_filename} {image_file.content_type} uploaded to {bucket.name} in folder 'dataset_images'.")
         try:
-            yolo_boxes = json.loads(yolo_boxes_data) 
+            blob = bucket.blob(destination_path)
+            blob.upload_from_file(image_file, content_type=image_file.content_type)
+            app.logger.info(
+                f"File {unique_filename} ({image_file.content_type}) uploaded to {bucket.name} in folder 'dataset_images'."
+            )
+        except Exception as e:
+            app.logger.error(f"Error uploading file to Firebase: {e}")
+            return error_response("Failed to upload image.", 500)
+
+        try:
+            yolo_boxes = json.loads(yolo_boxes_data)
         except json.JSONDecodeError as e:
             app.logger.error(f"Failed to parse YOLO boxes JSON: {e}")
-            return jsonify({"error": "Invalid JSON format for YOLO boxes"}), 400
+            return error_response("Invalid JSON format for YOLO boxes.", 400)
 
-        print(yolo_boxes[0])
+        if not yolo_boxes or not isinstance(yolo_boxes, list):
+            return error_response("YOLO boxes data is empty or invalid.", 400)
+
         insert_yolo_boxes(yolo_boxes[0]["class"], yolo_boxes[0]["x_center"], yolo_boxes[0]["y_center"], yolo_boxes[0]["w"], yolo_boxes[0]["h"], unique_filename)
 
         return jsonify({"message": f"File {unique_filename} uploaded successfully.", "file_url": blob.public_url}), 200

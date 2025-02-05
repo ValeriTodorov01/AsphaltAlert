@@ -71,6 +71,19 @@ const Header = ({ getPosition }: HeaderProps) => {
 		});
 	}, []);
 
+	const getCanvasBlob = useCallback(
+		(
+			canvas: HTMLCanvasElement,
+			type: string,
+			quality?: number
+		): Promise<Blob | null> => {
+			return new Promise((resolve) => {
+				canvas.toBlob(resolve, type, quality);
+			});
+		},
+		[]
+	);
+	
 	useEffect(() => {
 		if (image) {
 			resizeImageAsync(image)
@@ -84,18 +97,6 @@ const Header = ({ getPosition }: HeaderProps) => {
 		}
 	}, [image, resizeImageAsync]);
 
-	const getCanvasBlob = useCallback(
-		(
-			canvas: HTMLCanvasElement,
-			type: string,
-			quality?: number
-		): Promise<Blob | null> => {
-			return new Promise((resolve) => {
-				canvas.toBlob(resolve, type, quality);
-			});
-		},
-		[]
-	);
 
 	const handleOnAnnotationComplete = useCallback(
 		async (yoloBoxes: YOLOBox[]) => {
