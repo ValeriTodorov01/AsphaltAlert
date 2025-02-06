@@ -45,8 +45,8 @@ def create_app():
         app.logger.warning(message)
         return jsonify({"error": message}), code
 
-    @app.route('/detect_pothole', methods=['POST'])
-    def detect_pothole():
+    @app.route('/detect_danger', methods=['POST'])
+    def detect_danger():
         if 'image' not in request.files:
             app.logger.warning("No image file provided.")
             return jsonify({"error": "No image file provided"}), 400
@@ -86,15 +86,15 @@ def create_app():
 
         if detections > 0:
             max_speed = get_speed_limit(latitude, longitude)
-            app.logger.info(f"Pothole detected at {latitude}, {longitude} with speed limit {max_speed}")
+            app.logger.info(f"Danger detected at {latitude}, {longitude} with speed limit {max_speed}")
             if(max_speed is not None):
                 if(max_speed == 'Unknown'):
-                    insert_pothole(latitude, longitude, "Unknown")
+                    insert_danger(latitude, longitude, "Unknown")
                 else:
                     if(max_speed == '20 km/h' or max_speed == '30 km/h'):
-                        insert_pothole(latitude, longitude, "Low")
+                        insert_danger(latitude, longitude, "Low")
                     else:
-                        insert_pothole(latitude, longitude, "High")
+                        insert_danger(latitude, longitude, "High")
 
         return jsonify({"dangers_detected": detections}), 200
     
@@ -110,8 +110,8 @@ def create_app():
             app.logger.error(f"Error fetching speed limit from TomTom API: {e}")
             return "Error"
 
-    @app.route('/potholes', methods=['GET'])
-    def get_potholes():
+    @app.route('/dangers', methods=['GET'])
+    def get_dangers():
         try:
             east = float(request.args["east"])
             west = float(request.args["west"])
@@ -120,13 +120,13 @@ def create_app():
         except (KeyError, ValueError):
             return error_response("Invalid or missing query parameters for bounding box.")
 
-        potholes = Pothole.query.filter(
-            Pothole.latitude.between(south, north),
-            Pothole.longitude.between(west, east)
+        dangers = Danger.query.filter(
+            Danger.latitude.between(south, north),
+            Danger.longitude.between(west, east)
         ).all()
         result = [
             {"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity}
-            for p in potholes
+            for p in dangers
         ]
         return jsonify(result), 200
 
@@ -179,7 +179,7 @@ def create_app():
 
 db = SQLAlchemy()
 
-class Pothole(db.Model):
+class Danger(db.Model):
     __tablename__ = 'potholes'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -210,15 +210,15 @@ def insert_yolo_boxes(class_id, x_center, y_center, width, height, file_name):
         db.session.rollback()
         logging.error(f"Failed to insert yolo boxes: {e}")
 
-def insert_pothole(lat, lon, severity):
+def insert_danger(lat, lon, severity):
     try:
-        new_pothole = Pothole(latitude=lat, longitude=lon, severity=severity)
-        db.session.add(new_pothole)
+        new_danger = Danger(latitude=lat, longitude=lon, severity=severity)
+        db.session.add(new_danger)
         db.session.commit()
-        logging.info(f"Inserted pothole: lat={lat}, lon={lon}, severity={severity}")
+        logging.info(f"Inserted danger: lat={lat}, lon={lon}, severity={severity}")
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Failed to insert pothole: {e}")
+        logging.error(f"Failed to insert danger: {e}")
 
 
 if __name__ == '__main__':

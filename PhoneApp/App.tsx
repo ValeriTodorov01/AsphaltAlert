@@ -79,7 +79,7 @@ export default function App() {
     formData.append("latitude", position.coords.latitude.toString());
 
     try {
-      const response = await fetch("http://192.168.1.81:5000/detect_pothole", {
+      const response = await fetch("http://192.168.1.81:5000/detect_danger", {
         method: "POST",
         body: formData,
         headers: { Accept: "application/json" },

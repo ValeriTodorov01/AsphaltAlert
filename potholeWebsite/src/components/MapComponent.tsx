@@ -41,7 +41,7 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 					west: boundaries.west.toString(),
 				}).toString();
 
-				const response = await fetch(`http://127.0.0.1:5000/potholes?${queryParams}`, {
+				const response = await fetch(`http://127.0.0.1:5000/dangers?${queryParams}`, {
 					method: "GET",
 					mode: "cors"
 				});
