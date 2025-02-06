@@ -121,16 +121,16 @@ def create_app():
         if "boxes" not in request.form:
             return error_response("No boxes provided.")
 
-        image_file = request.files['image']
-        if not image_file or image_file.filename == '':
+        image_file = request.files["image"]
+        if not image_file or image_file.filename == "":
             app.logger.warning("Empty file name.")
             return jsonify({"error": "Empty file name"}), 400
 
-        yolo_boxes_data = request.form['boxes']
+        yolo_boxes_data = request.form["boxes"]
         if not yolo_boxes_data:
             app.logger.warning("No boxes provided.")
             return jsonify({"error": "No boxes provided"}), 400
-        
+
         unique_id = uuid.uuid4().hex
         unique_filename = f"{unique_id}" + ".jpeg"
         destination_path = f"dataset_images/{unique_filename}"
@@ -154,9 +154,18 @@ def create_app():
         if not yolo_boxes or not isinstance(yolo_boxes, list):
             return error_response("YOLO boxes data is empty or invalid.", 400)
 
-        insert_yolo_boxes(yolo_boxes[0]["class"], yolo_boxes[0]["x_center"], yolo_boxes[0]["y_center"], yolo_boxes[0]["w"], yolo_boxes[0]["h"], unique_filename)
+        insert_yolo_boxes(
+            yolo_boxes[0]["class"],
+            yolo_boxes[0]["x_center"],
+            yolo_boxes[0]["y_center"],
+            yolo_boxes[0]["w"],
+            yolo_boxes[0]["h"],
+            unique_filename,
+        )
 
-        return jsonify({"message": f"File {unique_filename} uploaded successfully.", "file_url": blob.public_url}), 200
+        return (jsonify({"message": f"File {unique_filename} uploaded successfully.",
+                            "file_url": blob.public_url,}),200,
+                )
 
     return app
 
