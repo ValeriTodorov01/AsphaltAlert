@@ -8,16 +8,13 @@ from ultralytics import YOLO
 
 class YOLOLitAPI(ls.LitAPI):
     def setup(self, device):
-        """
-        Load the YOLO model using the Ultralytics YOLO API.
-        """
         self.device = device if torch.cuda.is_available() else "cpu"
         self.model = YOLO("runs/detect/dataset3-train-x/weights/best.pt")
         self.transform = torchvision.transforms.ToTensor()
 
     def decode_request(self, request):
         if "image_data" not in request:
-            raise ValueError("The request must include an 'image_data' key with base64-encoded image data.")
+           raise ValueError("The request must include an 'image_data' key with base64-encoded image data.")
 
         image_data = request["image_data"]
         image_bytes = base64.b64decode(image_data)
