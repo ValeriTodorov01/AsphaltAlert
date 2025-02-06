@@ -41,10 +41,6 @@ def create_app():
 
     logging.basicConfig(level=logging.INFO)
 
-    def error_response(message, code=400):
-        app.logger.warning(message)
-        return jsonify({"error": message}), code
-
     @app.route('/detect_danger', methods=['POST'])
     def detect_danger():
         if 'image' not in request.files:
@@ -98,18 +94,6 @@ def create_app():
 
         return jsonify({"dangers_detected": detections}), 200
     
-    def get_speed_limit(lat, lon):
-        try:
-            url = TOMTOM_URL_TEMPLATE.format(latitude=lat, longitude=lon, key=TOMTOM_API_KEY)
-            response = requests.get(url, timeout=20)
-            response.raise_for_status()
-            data = response.json()
-            speed_limit_info = data.get("addresses", [{}])[0].get("address", {}).get("speedLimit", None)
-            return speed_limit_info or "Unknown"
-        except RequestException as e:
-            app.logger.error(f"Error fetching speed limit from TomTom API: {e}")
-            return "Error"
-
     @app.route('/dangers', methods=['GET'])
     def get_dangers():
         try:
@@ -219,6 +203,22 @@ def insert_danger(lat, lon, severity):
     except Exception as e:
         db.session.rollback()
         logging.error(f"Failed to insert danger: {e}")
+
+def error_response(message, code=400):
+    app.logger.warning(message)
+    return jsonify({"error": message}), code
+
+def get_speed_limit(lat, lon):
+    try:
+        url = TOMTOM_URL_TEMPLATE.format(latitude=lat, longitude=lon, key=TOMTOM_API_KEY)
+        response = requests.get(url, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        speed_limit_info = data.get("addresses", [{}])[0].get("address", {}).get("speedLimit", None)
+        return speed_limit_info or "Unknown"
+    except RequestException as e:
+        app.logger.error(f"Error fetching speed limit from TomTom API: {e}")
+        return "Error"
 
 
 if __name__ == '__main__':
