@@ -139,7 +139,8 @@ def create_app():
             blob = bucket.blob(destination_path)
             blob.upload_from_file(image_file, content_type=image_file.content_type)
             app.logger.info(
-                f"File {unique_filename} ({image_file.content_type}) uploaded to {bucket.name} in folder 'dataset_images'."
+                f"File {unique_filename} ({image_file.content_type}) uploaded to 
+                {bucket.name} in folder 'dataset_images'."
             )
         except Exception as e:
             app.logger.error(f"Error uploading file to Firebase: {e}")
@@ -173,7 +174,7 @@ def create_app():
 db = SQLAlchemy()
 
 class Danger(db.Model):
-    __tablename__ = 'potholes'
+    __tablename__ = 'dangers'
 
     id = db.Column(db.Integer, primary_key=True)
     latitude = db.Column(db.Float, nullable=False)
@@ -188,8 +189,8 @@ class YoloBoxes(db.Model):
     class_id = db.Column(db.Integer, nullable=False)
     x_center = db.Column(db.Float, nullable=False)
     y_center = db.Column(db.Float, nullable=False)
-    width = db.Column(db.Float, nullable=False) 
-    height = db.Column(db.Float, nullable=False)
+    width = db.Column(db.Integer, nullable=False) 
+    height = db.Column(db.Integer, nullable=False)
     file_name = db.Column(db.String(255), nullable=False)
 
 
