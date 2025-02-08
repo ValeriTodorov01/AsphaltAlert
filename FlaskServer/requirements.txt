@@ -3,3 +3,4 @@ requests
 Flask-SQLAlchemy
 python-dotenv
 flask-cors
+firebase_admin

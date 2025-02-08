@@ -138,10 +138,7 @@ def create_app():
         try:
             blob = bucket.blob(destination_path)
             blob.upload_from_file(image_file, content_type=image_file.content_type)
-            app.logger.info(
-                f"File {unique_filename} ({image_file.content_type}) uploaded to 
-                {bucket.name} in folder 'dataset_images'."
-            )
+            app.logger.info(f"File {unique_filename} ({image_file.content_type}) uploaded to {bucket.name} in folder 'dataset_images'.")
         except Exception as e:
             app.logger.error(f"Error uploading file to Firebase: {e}")
             return error_response("Failed to upload image.", 500)
