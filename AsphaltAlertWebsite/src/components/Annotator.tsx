@@ -120,7 +120,7 @@ const Annotator = ({
 				draggable={false}
 				className="absolute z-10"
 			/>
-			<div className="absolute flex gap-4 top-0 mt-2 xl:mt-10">
+			<div className="absolute flex gap-4 top-0 mt-2 xl:mt-1">
 				<button
 					style={{ userSelect: "none" }}
 					className=" top-0 mt-10 border border-black py-2 px-3 rounded-md z-20 bg-white hover:bg-stone-600 hover:text-white hover:transition hover:duration-200 duration-200"
