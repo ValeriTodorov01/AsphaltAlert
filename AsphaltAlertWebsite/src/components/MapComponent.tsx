@@ -75,11 +75,11 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 	return (
 		<APIProvider apiKey={import.meta.env.VITE_MAP_API_KEY}>
 			<div
-				className={`flex border-2 border-black h-[80%] w-[90%] mt-8 sm:mt-12`}>
+				className={`flex border-2 border-black h-[80%] w-[90%] mt-8 sm:mt-12 mb-2`}>
 				<Map
 					defaultCenter={centerCoords ? { lat: centerCoords.latitude, lng: centerCoords.longitude } : { lat: 42.699855, lng: 23.311125 }}
 					defaultZoom={17}
-					gestureHandling={"greedy"}
+					gestureHandling={"cooperative"}
 					disableDefaultUI={false}
 					mapId={import.meta.env.VITE_MAP_ID}
 					onIdle={handleIdle}

@@ -23,8 +23,8 @@ bucket = storage.bucket()
 
 load_dotenv()
 
-DB_URI = os.getenv("DB_URI")
-LITSERVE_URL = os.getenv("LITSERVE_URL")
+DB_URI = 'postgresql://user:password@localhost:5432/potholedb'
+LITSERVE_URL = "http://localhost:8000/predict"
 TOMTOM_API_KEY=os.getenv("TOMTOM_API_KEY")
 TOMTOM_URL_TEMPLATE = "https://api.tomtom.com/search/2/reverseGeocode/{latitude},{longitude}.json?key={key}&radius=100&returnSpeedLimit=true"
 
@@ -42,7 +42,7 @@ def create_app():
     logging.basicConfig(level=logging.INFO)
 
     @app.route('/detect_danger', methods=['POST'])
-    def detect_danger():
+    def detect_pothole():
         if 'image' not in request.files:
             app.logger.warning("No image file provided.")
             return jsonify({"error": "No image file provided"}), 400
@@ -51,23 +51,23 @@ def create_app():
             app.logger.warning("No geolocation data provided.")
             return jsonify({"error": "No geolocation provided"}), 400
 
-        image_file = request.files["image"]
-        if not image_file or image_file.filename == "":
-            return error_response("Empty file name.")
+        image_file = request.files['image']
+        app.logger.info(f"Received image file: {image_file.name}")
+        latitude_str = request.form['latitude']
+        longitude_str = request.form['longitude']
 
-        app.logger.info(f"Received image file: {image_file.filename}")
-        latitude_str = request.form.get("latitude")
-        longitude_str = request.form.get("longitude")
+        if not image_file or image_file.filename == '':
+            app.logger.warning("Empty file name.")
+            return jsonify({"error": "Empty file name"}), 400
 
         try:
             latitude = float(latitude_str)
             longitude = float(longitude_str)
         except ValueError:
-            return error_response(f"Invalid coordinates: {latitude_str}, {longitude_str}")
-
+            app.logger.warning(f"Invalid coordinates: {latitude_str}, {longitude_str}")
+            return jsonify({"error": "Invalid latitude or longitude"}), 400
     
-        image_file.seek(0)
-        image_data = base64.b64encode(image_file.read()).decode("utf-8")
+        image_data = base64.b64encode(image_file.read()).decode('utf-8')
         payload = {"image_data": image_data}
 
         try:
@@ -82,96 +82,90 @@ def create_app():
 
         if detections > 0:
             max_speed = get_speed_limit(latitude, longitude)
-            app.logger.info(f"Danger detected at {latitude}, {longitude} with speed limit {max_speed}")
+            app.logger.info(f"Pothole detected at {latitude}, {longitude} with speed limit {max_speed}")
             if(max_speed is not None):
                 if(max_speed == 'Unknown'):
-                    insert_danger(latitude, longitude, "Unknown")
+                    insert_pothole(latitude, longitude, "Unknown")
                 else:
                     if(max_speed == '20 km/h' or max_speed == '30 km/h'):
-                        insert_danger(latitude, longitude, "Low")
+                        insert_pothole(latitude, longitude, "Low")
                     else:
-                        insert_danger(latitude, longitude, "High")
+                        insert_pothole(latitude, longitude, "High")
 
         return jsonify({"dangers_detected": detections}), 200
     
-    @app.route('/dangers', methods=['GET'])
-    def get_dangers():
+    def get_speed_limit(lat, lon):
         try:
-            east = float(request.args["east"])
-            west = float(request.args["west"])
-            north = float(request.args["north"])
-            south = float(request.args["south"])
-        except (KeyError, ValueError):
-            return error_response("Invalid or missing query parameters for bounding box.")
+            url = TOMTOM_URL_TEMPLATE.format(latitude=lat, longitude=lon, key=TOMTOM_API_KEY)
+            response = requests.get(url, timeout=20)
+            response.raise_for_status()
+            data = response.json()
+            speed_limit_info = data.get("addresses", [{}])[0].get("address", {}).get("speedLimit", None)
+            return speed_limit_info or "Unknown"
+        except RequestException as e:
+            app.logger.error(f"Error fetching speed limit from TomTom API: {e}")
+            return "Error"
 
-        dangers = Danger.query.filter(
-            Danger.latitude.between(south, north),
-            Danger.longitude.between(west, east)
+    @app.route('/dangers', methods=['GET'])
+    def get_potholes():
+        east = float(request.args["east"])
+        west = float(request.args["west"])
+        north = float(request.args["north"])
+        south = float(request.args["south"])
+        potholes = Pothole.query.filter(
+            Pothole.latitude.between(south, north),
+            Pothole.longitude.between(west, east)
         ).all()
-        result = [
-            {"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity}
-            for p in dangers
-        ]
-        return jsonify(result), 200
+        return jsonify([{"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity} for p in potholes])
+
 
     @app.route('/upload_image', methods=['POST'])
     def upload_image():
-        if "image" not in request.files:
-            return error_response("No image file provided.")
-        if "boxes" not in request.form:
-            return error_response("No boxes provided.")
+        if 'image' not in request.files:
+            app.logger.warning("No image file provided.")
+            return jsonify({"error": "No image file provided"}), 400
 
-        image_file = request.files["image"]
-        if not image_file or image_file.filename == "":
-            app.logger.warning("Empty file name.")
-            return jsonify({"error": "Empty file name"}), 400
-
-        yolo_boxes_data = request.form["boxes"]
-        if not yolo_boxes_data:
+        if 'boxes' not in request.form:
             app.logger.warning("No boxes provided.")
             return jsonify({"error": "No boxes provided"}), 400
 
+
+        image_file = request.files['image']
+        yolo_boxes_data = request.form['boxes']
+
+        if not image_file or image_file.filename == '':
+            app.logger.warning("Empty file name.")
+            return jsonify({"error": "Empty file name"}), 400
+
+        if not yolo_boxes_data:
+            app.logger.warning("No boxes provided.")
+            return jsonify({"error": "No boxes provided"}), 400
+        
         unique_id = uuid.uuid4().hex
         unique_filename = f"{unique_id}" + ".jpeg"
         destination_path = f"dataset_images/{unique_filename}"
 
+        blob = bucket.blob(destination_path)
+        blob.upload_from_file(image_file, content_type=image_file.content_type)
+        app.logger.info(f"File {unique_filename} {image_file.content_type} uploaded to {bucket.name} in folder 'dataset_images'.")
         try:
-            blob = bucket.blob(destination_path)
-            blob.upload_from_file(image_file, content_type=image_file.content_type)
-            app.logger.info(f"File {unique_filename} ({image_file.content_type}) uploaded to {bucket.name} in folder 'dataset_images'.")
-        except Exception as e:
-            app.logger.error(f"Error uploading file to Firebase: {e}")
-            return error_response("Failed to upload image.", 500)
-
-        try:
-            yolo_boxes = json.loads(yolo_boxes_data)
+            yolo_boxes = json.loads(yolo_boxes_data) 
         except json.JSONDecodeError as e:
             app.logger.error(f"Failed to parse YOLO boxes JSON: {e}")
-            return error_response("Invalid JSON format for YOLO boxes.", 400)
+            return jsonify({"error": "Invalid JSON format for YOLO boxes"}), 400
 
-        if not yolo_boxes or not isinstance(yolo_boxes, list):
-            return error_response("YOLO boxes data is empty or invalid.", 400)
+        print(yolo_boxes[0])
+        insert_yolo_boxes(yolo_boxes[0]["class"], yolo_boxes[0]["x_center"], yolo_boxes[0]["y_center"], yolo_boxes[0]["w"], yolo_boxes[0]["h"], unique_filename)
 
-        insert_yolo_boxes(
-            yolo_boxes[0]["class"],
-            yolo_boxes[0]["x_center"],
-            yolo_boxes[0]["y_center"],
-            yolo_boxes[0]["w"],
-            yolo_boxes[0]["h"],
-            unique_filename,
-        )
-
-        return (jsonify({"message": f"File {unique_filename} uploaded successfully.",
-                            "file_url": blob.public_url,}),200,
-                )
+        return jsonify({"message": f"File {unique_filename} uploaded successfully.", "file_url": blob.public_url}), 200
 
     return app
 
 
 db = SQLAlchemy()
 
-class Danger(db.Model):
-    __tablename__ = 'dangers'
+class Pothole(db.Model):
+    __tablename__ = 'potholes'
 
     id = db.Column(db.Integer, primary_key=True)
     latitude = db.Column(db.Float, nullable=False)
@@ -186,8 +180,8 @@ class YoloBoxes(db.Model):
     class_id = db.Column(db.Integer, nullable=False)
     x_center = db.Column(db.Float, nullable=False)
     y_center = db.Column(db.Float, nullable=False)
-    width = db.Column(db.Integer, nullable=False) 
-    height = db.Column(db.Integer, nullable=False)
+    width = db.Column(db.Float, nullable=False) 
+    height = db.Column(db.Float, nullable=False)
     file_name = db.Column(db.String(255), nullable=False)
 
 
@@ -201,31 +195,15 @@ def insert_yolo_boxes(class_id, x_center, y_center, width, height, file_name):
         db.session.rollback()
         logging.error(f"Failed to insert yolo boxes: {e}")
 
-def insert_danger(lat, lon, severity):
+def insert_pothole(lat, lon, severity):
     try:
-        new_danger = Danger(latitude=lat, longitude=lon, severity=severity)
-        db.session.add(new_danger)
+        new_pothole = Pothole(latitude=lat, longitude=lon, severity=severity)
+        db.session.add(new_pothole)
         db.session.commit()
-        logging.info(f"Inserted danger: lat={lat}, lon={lon}, severity={severity}")
+        logging.info(f"Inserted pothole: lat={lat}, lon={lon}, severity={severity}")
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Failed to insert danger: {e}")
-
-def error_response(message, code=400):
-    app.logger.warning(message)
-    return jsonify({"error": message}), code
-
-def get_speed_limit(lat, lon):
-    try:
-        url = TOMTOM_URL_TEMPLATE.format(latitude=lat, longitude=lon, key=TOMTOM_API_KEY)
-        response = requests.get(url, timeout=20)
-        response.raise_for_status()
-        data = response.json()
-        speed_limit_info = data.get("addresses", [{}])[0].get("address", {}).get("speedLimit", None)
-        return speed_limit_info or "Unknown"
-    except RequestException as e:
-        app.logger.error(f"Error fetching speed limit from TomTom API: {e}")
-        return "Error"
+        logging.error(f"Failed to insert pothole: {e}")
 
 
 if __name__ == '__main__':

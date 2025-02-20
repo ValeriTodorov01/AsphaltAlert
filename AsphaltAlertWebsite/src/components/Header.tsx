@@ -83,7 +83,7 @@ const Header = ({ getPosition }: HeaderProps) => {
 		},
 		[]
 	);
-	
+
 	useEffect(() => {
 		if (image) {
 			resizeImageAsync(image)
@@ -96,7 +96,6 @@ const Header = ({ getPosition }: HeaderProps) => {
 				);
 		}
 	}, [image, resizeImageAsync]);
-
 
 	const handleOnAnnotationComplete = useCallback(
 		async (yoloBoxes: YOLOBox[]) => {
@@ -138,28 +137,33 @@ const Header = ({ getPosition }: HeaderProps) => {
 
 	return (
 		<>
-			<header className="flex justify-between w-full font-semibold text-[#344050] px-4 sm:px-12 pt-5">
-				<div className="flex flex-wrap gap-2 items-center justify-center">
+			<header className="flex justify-between font-semibold text-[#344050] w-[92%] gap-4 sm:gap-0 pt-7">
+				<div className="flex flex-wrap sm:gap-2 items-center justify-center">
 					<img src="Logo.svg" alt="Logo" className="w-11" />
 					<h1 className="text-2xl sm:text-3xl">AsphaltAlert</h1>
 				</div>
 
-				<div className="flex flex-col sm:flex-row gap-5">
+				<div className="flex flex-col sm:flex-row min-w-28 gap-2 sm:gap-5 text-sm sm:text-[15px] xl:text-lg">
 					<button
-						className="text-white text-[15px] bg-[#344050] rounded-xl p-3"
+						className="text-white bg-[#344050] rounded-xl p-3"
 						onClick={getPosition}>
 						{windowWidth < 640
-							? "Nearby Holes"
-							: "Show Nearby Holes"}
+							? "Nearby Dangers"
+							: "Show Nearby Dangers"}
 					</button>
 
-					<label className="flex items-center text-[15px] bg-[#D9D9D9] rounded-xl p-3 cursor-pointer">
-						{windowWidth < 640 ? "New Hole" : "Add New Hole"}
-						<span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 ml-2">
-							<span className="text-2xl sm:text-3xl leading-none">
-								+
+					<label className="flex items-center bg-[#D9D9D9] rounded-xl p-3 cursor-pointer justify-center">
+						{windowWidth < 640 ? "New Danger" : "Add New Danger"}
+						{windowWidth < 400 ? (
+							""
+						) : (
+							<span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 ml-2">
+								<span className="text-2xl sm:text-3xl leading-none">
+									+
+								</span>
 							</span>
-						</span>
+						)}
+
 						<input
 							type="file"
 							accept="image/png,image/jpg,image/jpeg"
