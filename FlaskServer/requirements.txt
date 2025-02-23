@@ -4,3 +4,4 @@ Flask-SQLAlchemy
 python-dotenv
 flask-cors
 firebase_admin
+psycopg2

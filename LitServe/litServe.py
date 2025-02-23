@@ -41,4 +41,4 @@ class YOLOLitAPI(ls.LitAPI):
 if __name__ == "__main__":
     api = YOLOLitAPI()
     server = ls.LitServer(api, accelerator="gpu")
-    server.run(port=8000)
+    server.run(host="0.0.0.0", port=8000)

@@ -1,0 +1,9 @@
+.venv
+.vscode
+cache
+datasets
+images
+output
+runs
+.gitignore
+bulgaria-latest.osm.pbf

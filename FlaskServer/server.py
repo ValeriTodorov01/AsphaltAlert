@@ -17,14 +17,14 @@ import firebase_admin
 from firebase_admin import credentials, storage
 from werkzeug.utils import secure_filename
 
-cred = credentials.Certificate("potholefinder-cbfd2-firebase-adminsdk-fbsvc-86bebd6531.json")
-firebase_admin.initialize_app(cred, {"storageBucket": "potholefinder-cbfd2.firebasestorage.app"})
+cred = credentials.Certificate("dangerfinder-84296-firebase-adminsdk-fbsvc-e02f62d844.json")
+firebase_admin.initialize_app(cred, {"storageBucket": "dangerfinder-84296.firebasestorage.app"})
 bucket = storage.bucket()
 
 load_dotenv()
 
-DB_URI = 'postgresql://user:password@localhost:5432/potholedb'
-LITSERVE_URL = "http://localhost:8000/predict"
+DB_URI = 'postgresql://user:password@postgres:5432/dangersdb'
+LITSERVE_URL = "http://litserve:8000/predict"
 TOMTOM_API_KEY=os.getenv("TOMTOM_API_KEY")
 TOMTOM_URL_TEMPLATE = "https://api.tomtom.com/search/2/reverseGeocode/{latitude},{longitude}.json?key={key}&radius=100&returnSpeedLimit=true"
 
@@ -42,7 +42,7 @@ def create_app():
     logging.basicConfig(level=logging.INFO)
 
     @app.route('/detect_danger', methods=['POST'])
-    def detect_pothole():
+    def detect_danger():
         if 'image' not in request.files:
             app.logger.warning("No image file provided.")
             return jsonify({"error": "No image file provided"}), 400
@@ -52,7 +52,6 @@ def create_app():
             return jsonify({"error": "No geolocation provided"}), 400
 
         image_file = request.files['image']
-        app.logger.info(f"Received image file: {image_file.name}")
         latitude_str = request.form['latitude']
         longitude_str = request.form['longitude']
 
@@ -82,15 +81,15 @@ def create_app():
 
         if detections > 0:
             max_speed = get_speed_limit(latitude, longitude)
-            app.logger.info(f"Pothole detected at {latitude}, {longitude} with speed limit {max_speed}")
+            app.logger.info(f"Danger detected at {latitude}, {longitude} with speed limit {max_speed}")
             if(max_speed is not None):
                 if(max_speed == 'Unknown'):
-                    insert_pothole(latitude, longitude, "Unknown")
+                    insert_danger(latitude, longitude, "Unknown")
                 else:
                     if(max_speed == '20 km/h' or max_speed == '30 km/h'):
-                        insert_pothole(latitude, longitude, "Low")
+                        insert_danger(latitude, longitude, "Low")
                     else:
-                        insert_pothole(latitude, longitude, "High")
+                        insert_danger(latitude, longitude, "High")
 
         return jsonify({"dangers_detected": detections}), 200
     
@@ -107,16 +106,16 @@ def create_app():
             return "Error"
 
     @app.route('/dangers', methods=['GET'])
-    def get_potholes():
+    def get_dangers():
         east = float(request.args["east"])
         west = float(request.args["west"])
         north = float(request.args["north"])
         south = float(request.args["south"])
-        potholes = Pothole.query.filter(
-            Pothole.latitude.between(south, north),
-            Pothole.longitude.between(west, east)
+        dangers = Danger.query.filter(
+            Danger.latitude.between(south, north),
+            Danger.longitude.between(west, east)
         ).all()
-        return jsonify([{"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity} for p in potholes])
+        return jsonify([{"latitude": p.latitude, "longitude": p.longitude, "severity": p.severity} for p in dangers])
 
 
     @app.route('/upload_image', methods=['POST'])
@@ -143,7 +142,7 @@ def create_app():
         
         unique_id = uuid.uuid4().hex
         unique_filename = f"{unique_id}" + ".jpeg"
-        destination_path = f"dataset_images/{unique_filename}"
+        destination_path = f"datasetImages/{unique_filename}"
 
         blob = bucket.blob(destination_path)
         blob.upload_from_file(image_file, content_type=image_file.content_type)
@@ -164,8 +163,8 @@ def create_app():
 
 db = SQLAlchemy()
 
-class Pothole(db.Model):
-    __tablename__ = 'potholes'
+class Danger(db.Model):
+    __tablename__ = 'dangers'
 
     id = db.Column(db.Integer, primary_key=True)
     latitude = db.Column(db.Float, nullable=False)
@@ -174,14 +173,14 @@ class Pothole(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
 class YoloBoxes(db.Model):
-    __tablename__ = 'yoloBoxes'
+    __tablename__ = 'yoloboxes'
 
     id = db.Column(db.Integer, primary_key=True)
     class_id = db.Column(db.Integer, nullable=False)
     x_center = db.Column(db.Float, nullable=False)
     y_center = db.Column(db.Float, nullable=False)
-    width = db.Column(db.Float, nullable=False) 
-    height = db.Column(db.Float, nullable=False)
+    width = db.Column(db.Integer, nullable=False) 
+    height = db.Column(db.Integer, nullable=False)
     file_name = db.Column(db.String(255), nullable=False)
 
 
@@ -195,15 +194,15 @@ def insert_yolo_boxes(class_id, x_center, y_center, width, height, file_name):
         db.session.rollback()
         logging.error(f"Failed to insert yolo boxes: {e}")
 
-def insert_pothole(lat, lon, severity):
+def insert_danger(lat, lon, severity):
     try:
-        new_pothole = Pothole(latitude=lat, longitude=lon, severity=severity)
-        db.session.add(new_pothole)
+        new_danger = Danger(latitude=lat, longitude=lon, severity=severity)
+        db.session.add(new_danger)
         db.session.commit()
-        logging.info(f"Inserted pothole: lat={lat}, lon={lon}, severity={severity}")
+        logging.info(f"Inserted danger: lat={lat}, lon={lon}, severity={severity}")
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Failed to insert pothole: {e}")
+        logging.error(f"Failed to insert danger: {e}")
 
 
 if __name__ == '__main__':

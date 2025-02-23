@@ -79,7 +79,8 @@ export default function App() {
     formData.append("latitude", position.coords.latitude.toString());
 
     try {
-      const response = await fetch("http://10.0.2.2:5000/detect_danger", {
+      console.log("Sending photo to server...");
+      const response = await fetch("http://192.168.0.107:5000/detect_danger", {
         method: "POST",
         body: formData,
         headers: { Accept: "application/json" },
@@ -97,6 +98,7 @@ export default function App() {
   const takePicture = async () => {
     if (!cameraRef.current) return;
     try {
+      console.log("Capturing photo...");
       const [capturedPhoto, position] = await Promise.all([
         cameraRef.current.takePhoto({ enableShutterSound: false }),
         getPosition(),

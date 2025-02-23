@@ -1,0 +1,58 @@
+services:
+  website:
+    build: ./AsphaltAlertWebsite
+    ports:
+      - "5173:80"
+    container_name: AsphaltAlertWebsite
+    networks:
+      - shared_network
+
+  postgres:
+    image: postgres:17
+    container_name: PostgresContainer
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/postgresData:/var/lib/postgresql/data
+      - ./database/initialTables/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - shared_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flask:
+    build: ./FlaskServer
+    ports:
+      - "5000:5000"
+    container_name: AsphaltAlertFlask
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - shared_network
+
+  litserve:
+    container_name: LitServe
+    build: ./LitServe
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [ gpu ]
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    name: shared_network
+    driver: bridge

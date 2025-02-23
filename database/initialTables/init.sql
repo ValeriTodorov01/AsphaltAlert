@@ -2,10 +2,11 @@ CREATE TABLE dangers (
     id SERIAL PRIMARY KEY,              
     latitude DOUBLE PRECISION NOT NULL, 
     longitude DOUBLE PRECISION NOT NULL,
-    severity VARCHAR(50) NOT NULL    
+    severity VARCHAR(16) NOT NULL,  
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
-CREATE TABLE yoloBoxes (
+CREATE TABLE "yoloBoxes" (
     id SERIAL PRIMARY KEY,       
     class_id INTEGER NOT NULL,       
     x_center DOUBLE PRECISION NOT NULL, 
