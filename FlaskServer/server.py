@@ -31,6 +31,7 @@ TOMTOM_URL_TEMPLATE = os.getenv("TOMTOM_URL_TEMPLATE")
 
 REQUEST_TIMEOUT = 5 
 
+db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
@@ -162,8 +163,6 @@ def create_app():
 
     return app
 
-
-db = SQLAlchemy()
 
 class Danger(db.Model):
     __tablename__ = 'dangers'

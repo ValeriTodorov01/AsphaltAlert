@@ -10,6 +10,9 @@ interface MapComponentProps {
 	centerCoords: GeolocationCoordinates | undefined;
 }
 
+//Sofia center coordinates
+const defaultCoords = { lat: 42.684928, lng: 23.316489 };
+
 const MapComponent = ({ centerCoords }: MapComponentProps) => {
 	const [locations, setLocations] = useState<Hole[]>([]);
 	const [boundaries, setBoundaries] =
@@ -42,7 +45,10 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 					west: boundaries.west.toString(),
 				}).toString();
 
-				const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/dangers?${queryParams}`,
+				const response = await fetch(
+					`${
+						import.meta.env.VITE_BACKEND_URL
+					}/dangers?${queryParams}`,
 					{
 						method: "GET",
 						mode: "cors",
@@ -57,7 +63,14 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 				}
 
 				const transformedData: Hole[] = data.map(
-					(hole: { latitude: number; longitude: number; severity: number }, index: number) => ({
+					(
+						hole: {
+							latitude: number;
+							longitude: number;
+							severity: number;
+						},
+						index: number
+					) => ({
 						key: index.toString(),
 						location: { lat: hole.latitude, lng: hole.longitude },
 						severity: hole.severity.toString(),
@@ -84,7 +97,7 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 									lat: centerCoords.latitude,
 									lng: centerCoords.longitude,
 							  }
-							: { lat: 42.699855, lng: 23.311125 }
+							: defaultCoords
 					}
 					defaultZoom={17}
 					gestureHandling={"cooperative"}
