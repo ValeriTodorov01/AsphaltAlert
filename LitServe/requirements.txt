@@ -5,4 +5,5 @@ Pillow
 ultralytics
 litserve
 opencv-python-headless
+python-dotenv
 

@@ -15,6 +15,7 @@ import {
   useCameraFormat,
 } from "react-native-vision-camera";
 import Geolocation from "react-native-geolocation-service";
+import {BACKEND_URL} from '@env'
 
 export default function App() {
   const device = useCameraDevice("back");
@@ -80,7 +81,7 @@ export default function App() {
 
     try {
       console.log("Sending photo to server...");
-      const response = await fetch("http://192.168.0.107:5000/detect_danger", {
+      const response = await fetch(`${BACKEND_URL}/detect_danger`, {
         method: "POST",
         body: formData,
         headers: { Accept: "application/json" },
@@ -144,7 +145,7 @@ export default function App() {
       <TouchableOpacity
         style={isWorking ? styles.buttonStop : styles.buttonStart}
         onPress={onPress}
-      />
+        />
     </View>
   );
 }

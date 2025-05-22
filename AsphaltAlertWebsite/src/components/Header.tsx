@@ -114,7 +114,7 @@ const Header = ({ getPosition }: HeaderProps) => {
 				formData.append("boxes", JSON.stringify(yoloBoxes));
 
 				const response = await fetch(
-					"http://127.0.0.1:5000/upload_image",
+					`${import.meta.env.VITE_BACKEND_URL}/upload_image`,
 					{
 						method: "POST",
 						body: formData,

@@ -5,6 +5,8 @@ import io
 import base64
 import litserve as ls
 from ultralytics import YOLO
+import os
+from dotenv import load_dotenv
 
 class YOLOLitAPI(ls.LitAPI):
     def setup(self, device):
@@ -26,7 +28,7 @@ class YOLOLitAPI(ls.LitAPI):
 
     def predict(self, input_tensor):
         with torch.no_grad():
-            predictions = self.model.predict(input_tensor, conf=0.3)
+            predictions = self.model.predict(input_tensor, conf=0.4)
             
         return predictions
 
@@ -41,4 +43,6 @@ class YOLOLitAPI(ls.LitAPI):
 if __name__ == "__main__":
     api = YOLOLitAPI()
     server = ls.LitServer(api, accelerator="gpu")
-    server.run(host="0.0.0.0", port=8000)
+    load_dotenv()
+    port = int(os.getenv("PORT", 8000))
+    server.run(host="0.0.0.0", port=port)

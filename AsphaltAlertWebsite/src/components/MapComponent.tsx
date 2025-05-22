@@ -12,7 +12,8 @@ interface MapComponentProps {
 
 const MapComponent = ({ centerCoords }: MapComponentProps) => {
 	const [locations, setLocations] = useState<Hole[]>([]);
-	const [boundaries, setBoundaries] = useState<google.maps.LatLngBoundsLiteral>();
+	const [boundaries, setBoundaries] =
+		useState<google.maps.LatLngBoundsLiteral>();
 	const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
 	const handleIdle = (event: MapEvent) => {
@@ -41,10 +42,12 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 					west: boundaries.west.toString(),
 				}).toString();
 
-				const response = await fetch(`http://127.0.0.1:5000/dangers?${queryParams}`, {
-					method: "GET",
-					mode: "cors"
-				});
+				const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/dangers?${queryParams}`,
+					{
+						method: "GET",
+						mode: "cors",
+					}
+				);
 				if (!response.ok) {
 					throw new Error(`Failed to fetch: ${response.statusText}`);
 				}
@@ -52,39 +55,46 @@ const MapComponent = ({ centerCoords }: MapComponentProps) => {
 				if (!Array.isArray(data)) {
 					throw new Error("Unexpected response format");
 				}
-		
+
 				const transformedData: Hole[] = data.map(
-					(hole: any, index: number) => ({
+					(hole: { latitude: number; longitude: number; severity: number }, index: number) => ({
 						key: index.toString(),
 						location: { lat: hole.latitude, lng: hole.longitude },
-						severity: hole.severity
+						severity: hole.severity.toString(),
 					})
 				);
-		
+
 				setLocations(transformedData);
 			} catch (error) {
 				throw new Error(`Failed to fetch: ${error}`);
 			}
 		};
-		
 
 		fetchHoles();
 	}, [boundaries]);
-
 
 	return (
 		<APIProvider apiKey={import.meta.env.VITE_MAP_API_KEY}>
 			<div
 				className={`flex border-2 border-black h-[80%] w-[90%] mt-8 sm:mt-12 mb-2`}>
 				<Map
-					defaultCenter={centerCoords ? { lat: centerCoords.latitude, lng: centerCoords.longitude } : { lat: 42.699855, lng: 23.311125 }}
+					defaultCenter={
+						centerCoords
+							? {
+									lat: centerCoords.latitude,
+									lng: centerCoords.longitude,
+							  }
+							: { lat: 42.699855, lng: 23.311125 }
+					}
 					defaultZoom={17}
 					gestureHandling={"cooperative"}
 					disableDefaultUI={false}
 					mapId={import.meta.env.VITE_MAP_ID}
-					onIdle={handleIdle}
-					>
-					<AllMarkers points={locations} centerCoords={centerCoords}/>
+					onIdle={handleIdle}>
+					<AllMarkers
+						points={locations}
+						centerCoords={centerCoords}
+					/>
 				</Map>
 			</div>
 		</APIProvider>

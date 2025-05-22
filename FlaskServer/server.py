@@ -16,17 +16,18 @@ from requests.exceptions import RequestException
 import firebase_admin
 from firebase_admin import credentials, storage
 from werkzeug.utils import secure_filename
-
-cred = credentials.Certificate("dangerfinder-84296-firebase-adminsdk-fbsvc-e02f62d844.json")
-firebase_admin.initialize_app(cred, {"storageBucket": "dangerfinder-84296.firebasestorage.app"})
-bucket = storage.bucket()
-
 load_dotenv()
 
-DB_URI = 'postgresql://user:password@postgres:5432/dangersdb'
-LITSERVE_URL = "http://litserve:8000/predict"
-TOMTOM_API_KEY=os.getenv("TOMTOM_API_KEY")
-TOMTOM_URL_TEMPLATE = "https://api.tomtom.com/search/2/reverseGeocode/{latitude},{longitude}.json?key={key}&radius=100&returnSpeedLimit=true"
+FIREBASE_CERTIFICATE_PATH = os.getenv("FIREBASE_CERTIFICATE_PATH")
+FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET")
+cred = credentials.Certificate(FIREBASE_CERTIFICATE_PATH)
+firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
+bucket = storage.bucket()
+
+DB_URI = os.getenv("DB_URI")
+LITSERVE_URL = os.getenv("LITSERVE_URL")
+TOMTOM_API_KEY = os.getenv("TOMTOM_API_KEY")
+TOMTOM_URL_TEMPLATE = os.getenv("TOMTOM_URL_TEMPLATE")
 
 REQUEST_TIMEOUT = 5 
 
@@ -86,7 +87,7 @@ def create_app():
                 if(max_speed == 'Unknown'):
                     insert_danger(latitude, longitude, "Unknown")
                 else:
-                    if(max_speed == '20 km/h' or max_speed == '30 km/h'):
+                    if(max_speed == '20.00KPH' or max_speed == '30.00KPH' or max_speed == '50.00KPH'):
                         insert_danger(latitude, longitude, "Low")
                     else:
                         insert_danger(latitude, longitude, "High")
@@ -100,6 +101,7 @@ def create_app():
             response.raise_for_status()
             data = response.json()
             speed_limit_info = data.get("addresses", [{}])[0].get("address", {}).get("speedLimit", None)
+            logging.info(f"Speed limit info: {data}")
             return speed_limit_info or "Unknown"
         except RequestException as e:
             app.logger.error(f"Error fetching speed limit from TomTom API: {e}")
@@ -194,8 +196,27 @@ def insert_yolo_boxes(class_id, x_center, y_center, width, height, file_name):
         db.session.rollback()
         logging.error(f"Failed to insert yolo boxes: {e}")
 
+DELTA_DEG = 0.0000900
+
 def insert_danger(lat, lon, severity):
     try:
+        min_lat, max_lat = lat - DELTA_DEG, lat + DELTA_DEG
+        min_lon, max_lon = lon - DELTA_DEG, lon + DELTA_DEG
+        nearby = (
+            Danger.query
+            .filter(Danger.latitude  >= min_lat)
+            .filter(Danger.latitude  <= max_lat)
+            .filter(Danger.longitude >= min_lon)
+            .filter(Danger.longitude <= max_lon)
+            .first()
+        )
+        if nearby:
+            logging.info(
+            f"Skipping insert: existing danger within ~2 m "
+            f"at ({nearby.latitude}, {nearby.longitude})"
+            )
+            return
+        
         new_danger = Danger(latitude=lat, longitude=lon, severity=severity)
         db.session.add(new_danger)
         db.session.commit()
